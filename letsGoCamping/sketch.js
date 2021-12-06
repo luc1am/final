@@ -58,13 +58,8 @@ var logs = {
 
 var mic;
 var butt;//(button) for restart
-var flame0;
-var flame1;
-var flame2;
-var flame3;
-var flame4;
-var flame5;
-var flame6;
+var flames = [];
+var button2;
 
 class TheFire {
   constructor(x,y,size) {
@@ -137,22 +132,55 @@ class Cooking {
   }
 }
 
-
-function setup() {
-  createCanvas(500,500);
-  mic = new p5.AudioIn();
-  mic.start();
-  flame0 = new TheFire(10,0,1.2);
-  flame1 = new TheFire(-40,20,1.35);
-  flame2 = new TheFire(-50,0,1.3);
-  flame3 = new TheFire(-80,30,1);
-  flame4 = new TheFire(30,30,1.25);
-  flame5 = new TheFire(0,20, 1);
-  flame6 = new TheFire(30,50,1);
+class SnowFlake {
+  constructor(x,y=0){
+    this.x = x;
+    this.y = y;
+  }
+  display(){
+    fill(255);
+    ellipse(this.x,this.y,5,5);
+  }
+  move(){
+    this.y+=1;
+    this.x+=random(-1,1);
+  }
 }
 
-function draw() {
-  background(palette.blood);
+var x = [10,-40,-50,-80,30,0,30]
+var y = [0,20,0,30,30,20,50]
+size = [1.2, 1.35,1.3,1,1.25,1,1]
+var xx = 10;
+var yy = 10;
+var arr = []
+
+
+function setup() {
+  createCanvas(windowWidth,windowHeight);
+  mic = new p5.AudioIn();
+  mic.start();
+
+  for (let i = 0; i<7; i++){
+    flames.push(new TheFire(x[i],y[i],size[i]))
+  }
+
+  for (let j = 0; j < width; j+= random(10,18)){
+    arr.push(new SnowFlake(xx,yy));
+  }
+  button2 = createButton('start');
+  button2.position(width/2, height/2);
+  button2.mousePressed(start);
+}
+var x = 10;
+var y = 10;
+function draw(){
+  titleScreen();
+  snowfall();
+}
+function start(){
+  let color1 = color(1, 23, 47);
+  let color2 = color(45, 66, 89)
+  setGradient(color1, color2);
   var intensity = mic.getLevel();
   fill(palette.almond)
   text("feed the flame by blowing on the mic", 100,100)
@@ -167,41 +195,103 @@ function draw() {
   translate(0,-50*intensity);
   scale(5*intensity,8*intensity*intensity);
   scale(intensity)
+  for (let i = 0; i< flames.length; i++){
+    flames[i].display();
+  }
 
-//change into an array pls!!
-  flame0.display()
-  flame1.display()
-  flame2.display()
-  flame3.display()
-  flame4.display()
-  flame5.display()
-  flame6.display()
   pop();
 
   logs.display(200,400,20);
   logs.display(300,380,170);
-
+  for (let i = 0; i< flames.length; i++){
+    flames[i].moveFire(intensity);
+  }
   //blew too hard, flame extinguished
-  flame0.moveFire(intensity);
-  flame1.moveFire(intensity);
-  flame2.moveFire(intensity);
-  flame3.moveFire(intensity);
-  flame4.moveFire(intensity);
-  flame5.moveFire(intensity);
-  flame6.moveFire(intensity);
+
   ///move this into a function or class
 
+}
+
+function titleScreen(){
+  let color1 = color(1, 23, 47);
+  let color2 = color(45, 66, 89)
+  setGradient(color1, color2); // background
+  fill('#1d332f'); //green ground
+  rectMode(CENTER)
+  rect(width/2, height-50, width, 100);
+  for (let i = 0; i < 30; i++){
+    tree(20+50*i, height-120);
+    tree(35+45*i, height-100)
+  }
+  //tiny fire
+  //frameRate(10);
+  noStroke();
+  let fireX = width/2;
+  let fireY = height-50;
+
+  for (let i = 0; i<5; i++){
+    ellipseMode(CENTER);
+    fill(255, 221, 0, 50)
+    let size = 100 + i**4;
+    ellipse(fireX, fireY-i**2, size+random(4), size+random(6))
+  }
+  fill(palette.rust);
+  quad(fireX,fireY, fireX+4, fireY+8, fireX, fireY+10, fireX-4,fireY+8);
+  fill(50);
+  rect(fireX, fireY+11,10,3)
+  //tree(100,100);
+
+  fill(95, 120, 125);
+  rectMode(CENTER);
+  textAlign(CENTER);
+  textSize(100);
+  text("let's go camping", width/2, 100);
+}
+
+ function snowfall(){
+   for (let i = 0; i<arr.length; i++){
+     arr[i].display();
+     arr[i].move();
+     //print(i);
+   }
+ }
+
+//THIS FUNCTION IS NOT MY OWN
+//https://editor.p5js.org/REAS/sketches/S1TNUPzim
+//must set color as color(r,g,b)
+function setGradient(c1, c2) {
+  // noprotect
+  noFill();
+  for (var y = 0; y < height; y++) {
+    var inter = map(y, 0, height, 0, 1);
+    var c = lerpColor(c1, c2, inter);
+    stroke(c);
+    line(0, y, width, y);
+  }
+}
+
+function tree(x,y){
+  push();
+  noStroke();
+  translate(x,y);
+  fill('#261f12');
+  //doublecheck
+  rectMode(CENTER);
+  //x,y,(centered)size, size
+  rect(10,30,10,10);
+  fill('#2c3b2f')
+
+  triangle(10,0,20,20,0,20);
+  push();
+
+  translate(0,10);
+  triangle(10,0,20,20,0,20);
+  pop();
+  pop();
 }
 
 
 function retry(){
   loop();
   removeElements();
-}
-
-
-function titleScreen(){
-  pass;
-  // display high scores
-  //display
 }

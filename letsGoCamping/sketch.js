@@ -60,6 +60,9 @@ var mic;
 var butt;//(button) for restart
 var flames = [];
 var button2;
+var flag;// which screen
+var timer;
+
 
 class TheFire {
   constructor(x,y,size) {
@@ -69,6 +72,7 @@ class TheFire {
   }
   display(){
     push();
+    noStroke();
     rectMode(CENTER)
     //adjust for displacement,
     translate(this.x-50,this.y-125);
@@ -106,7 +110,12 @@ class TheFire {
 
   }
   moveFire(intensity){
-    if (intensity>0.9){
+    if (intensity > 3 && intensity < 9){
+      if (millis() - timer > 3000){
+        changeFlag();
+      }
+    }
+    if (intensity>9){
       noLoop();
       background(palette.blood);
       logs.display(250,340,5);
@@ -121,38 +130,34 @@ class TheFire {
   }
 }
 
-class Cooking {
-  constructor(pot, pan, food) {
-    this.pot = pot;
-    this.pan = pan;
-    this.food = []; //contains multiple food items
-  }
-  display(){
-    //
-  }
-}
 
+//https://www.youtube.com/watch?v=cl-mHFCGzYk
 class SnowFlake {
-  constructor(x,y=0){
-    this.x = x;
-    this.y = y;
+  constructor(){
+    let x = random(width);
+    let y = random(-100,-10);
+//using vector math
+//https://p5js.org/reference/#/p5.Vector
+    this.pos = createVector(x,y);
+    this.vel = createVector(0,1);
+    this.acc = createVector();
+
   }
-  display(){
-    fill(255);
-    ellipse(this.x,this.y,5,5);
+  update(){
+    this.pos.add(this.vel);
+    this.pos.add()
   }
-  move(){
-    this.y+=1;
-    this.x+=random(-1,1);
+  render(){
+    stroke(255,255,255,150);
+    strokeWeight(4);
+    point(this.pos.x, this.pos.y); //accesses vector <x,y>
   }
 }
 
 var x = [10,-40,-50,-80,30,0,30]
 var y = [0,20,0,30,30,20,50]
-size = [1.2, 1.35,1.3,1,1.25,1,1]
-var xx = 10;
-var yy = 10;
-var arr = []
+var size = [1.2, 1.35,1.3,1,1.25,1,1]
+var snow = [];
 
 
 function setup() {
@@ -164,51 +169,58 @@ function setup() {
     flames.push(new TheFire(x[i],y[i],size[i]))
   }
 
-  for (let j = 0; j < width; j+= random(10,18)){
-    arr.push(new SnowFlake(xx,yy));
-  }
-  button2 = createButton('start');
-  button2.position(width/2, height/2);
-  button2.mousePressed(start);
+
+  flag = 1;
+
 }
 var x = 10;
 var y = 10;
+
 function draw(){
-  titleScreen();
-  snowfall();
+  frameRate(20);
+  snow.push(new SnowFlake());
+  if (flag == 1){
+    titleScreen();
+  }
+  else if (flag == 2){
+    start();
+  }
+  else if (flag ==3){
+    forrest();
+
+  }
+  else if (flag == 0){
+    deathScreen();
+  }
+  for (flake of snow){
+    flake.update();
+    flake.render();
+  }
 }
-function start(){
-  let color1 = color(1, 23, 47);
-  let color2 = color(45, 66, 89)
-  setGradient(color1, color2);
-  var intensity = mic.getLevel();
-  fill(palette.almond)
-  text("feed the flame by blowing on the mic", 100,100)
-  //log in the back of flames
-  logs.display(250,340,5);
 
-  //print(intensity);
-  //it works!!
-
-  push();
-  translate(250,350)
-  translate(0,-50*intensity);
-  scale(5*intensity,8*intensity*intensity);
-  scale(intensity)
-  for (let i = 0; i< flames.length; i++){
-    flames[i].display();
+function forrest(){
+  background(0);
+  noStroke();
+  fill(palette.almond);
+  text("shh I think I heard something in the woods...", 400,400);
+  var intensity = (mic.getLevel())*10;
+  if (intensity > 2){
+    text("GGRRRWWWWRRR", 300,200);
   }
-
-  pop();
-
-  logs.display(200,400,20);
-  logs.display(300,380,170);
-  for (let i = 0; i< flames.length; i++){
-    flames[i].moveFire(intensity);
+  if (intensity >5){
+    flag = 0;
   }
-  //blew too hard, flame extinguished
+}
 
-  ///move this into a function or class
+function deathScreen(){
+
+  fill(palette.rust);
+  noStroke();
+  fontSize(100);
+  text('You Died', width/2, height/2  );
+
+  fontSize(20);
+  //text(cause, width/2, height/2 +100);
 
 }
 
@@ -245,7 +257,53 @@ function titleScreen(){
   rectMode(CENTER);
   textAlign(CENTER);
   textSize(100);
-  text("let's go camping", width/2, 100);
+  text("Let's Go Camping", width/2, 100);
+  button2 = createButton('start');
+  button2.position(width/2, height/2);
+  button2.mousePressed(changeFlag);
+}
+
+function changeFlag(){
+  flag+=1;
+  timer = millis();
+}
+
+function start(){
+  let color1 = color(1, 23, 47);
+  let color2 = color(45, 66, 89)
+  setGradient(color1, color2); // background
+  removeElements();
+  var intensity = (mic.getLevel())*10;
+  fill(palette.almond)
+  textSize(10);
+  noStroke();
+  text("feed the flame by blowing on the mic", 100,100)
+  //log in the back of flames
+  logs.display(250,340,5);
+
+  //print(intensity);
+  //it works!!
+
+  push();
+  translate(250,350)
+  translate(0,-50*intensity);
+  scale(2*intensity,2*intensity);
+  scale(intensity)
+  for (let i = 0; i< flames.length; i++){
+    flames[i].display();
+  }
+
+  pop();
+
+  logs.display(200,400,20);
+  logs.display(300,380,170);
+  for (let i = 0; i< flames.length; i++){
+    flames[i].moveFire(intensity);
+  }
+  //blew too hard, flame extinguished
+
+  ///move this into a function or class
+
 }
 
  function snowfall(){
